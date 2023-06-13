@@ -1,0 +1,127 @@
+{
+  // --------------------------------------------------------------------------
+  // Editor
+  "editor.dragAndDrop": false,
+  "editor.fontFamily": "Source Code Pro",
+  "editor.fontLigatures": true,
+  "editor.fontSize": 10, // 12 when "window.zoomLevel" = 0
+  "editor.formatOnPaste": true,
+    // "editor.formatOnSave": true,
+  "editor.multiCursorModifier": "ctrlCmd",
+  "editor.renderWhitespace": "all",
+  "editor.inlineSuggest.enabled": true,
+  "editor.rulers": [
+      // RULERS
+      80,
+      120
+  ],
+  "editor.snippetSuggestions": "top",
+  "editor.tabSize": 2,
+  "editor.wordWrap": "on",
+  "editor.stickyScroll.enabled": true,
+
+  // --------------------------------------------------------------------------
+  "explorer.confirmDelete": false,
+  "explorer.confirmDragAndDrop": false,
+
+  // --------------------------------------------------------------------------
+  "window.closeWhenEmpty": true,
+  "window.zoomLevel": 0,
+
+  // --------------------------------------------------------------------------
+  "workbench.startupEditor": "none",
+  "workbench.colorTheme": "Nord",
+  "workbench.sideBar.location": "right",
+  "workbench.iconTheme": "vscode-icons",
+  // "workbench.preferredDarkColorTheme":"Default Dark+",
+
+  // --------------------------------------------------------------------------
+  "redhat.telemetry.enabled": false,
+
+  // --------------------------------------------------------------------------
+  // GIT
+  "git.enabled": true,
+  "git.ignoreMissingGitWarning": true,
+  "git.confirmSync": false,
+  "git.autofetch": true,
+
+  // --------------------------------------------------------------------------
+  // SUBLIME MERGE
+  "vscsm.showBranchName": true,
+  // "vscsm.smergeExecutablePath": "/opt/SublimeMerge/sublime_merge",
+
+  // --------------------------------------------------------------------------
+  "terminal.integrated.inheritEnv": false,
+
+  // --------------------------------------------------------------------------
+  "tabnine.experimentalAutoImports": true,
+
+  // --------------------------------------------------------------------------
+  // PYTHON
+  "python.defaultInterpreterPath": "/opt/Anaconda3/bin/python",
+  "[python]": {
+      "editor.wordBasedSuggestions": false,
+      "editor.insertSpaces": true,
+      "editor.tabSize": 2,
+      "editor.formatOnSaveMode": "file",
+      // "editor.formatOnSave": true,
+      "editor.codeActionsOnSave": {
+          "source.organizeImports": true
+      }
+  },
+  // "python.linting.pycodestyleEnabled": true,
+  "python.linting.enabled": true,
+  "python.linting.pylintEnabled": true,
+  "python.linting.pylintArgs": [
+      "--rcfile=./.pylintrc",
+      "--disable=E0015"
+  ],
+
+
+  "python.analysis.typeCheckingMode": "basic", //"strict"
+  // "python.formatting.provider": "black",
+  "jupyter.askForKernelRestart": false,
+  "notebook.lineNumbers": "on",
+
+  // --------------------------------------------------------------------------
+  "[sql]": {
+      "editor.formatOnSaveMode": "file",
+      "editor.formatOnSave": true,
+      "editor.codeActionsOnSave": {
+          "source.organizeImports": true
+      },
+      "editor.tabSize": 2,
+  },
+
+  // "github.copilot.enable": {
+  //     "*": true,
+  //     "yaml": true,
+  //     "plaintext": true,
+  //     "markdown": false
+  // },
+
+  // --------------------------------------------------------------------------
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+
+  // --------------------------------------------------------------------------
+  "security.workspace.trust.untrustedFiles": "newWindow",
+
+  // --------------------------------------------------------------------------
+  //Change python color customizations
+  // "editor.tokenColorCustomizations": {
+  //     "textMateRules": [
+  //         {
+  //             "scope": [
+  //                 "string.quoted.docstring.multi.python",
+  //                 "comment.line.number-sign.python",
+  //                 "entity.name.type.class.python"
+  //             ],
+  //             "settings": {
+  //                 "foreground": "#FFFF00"
+  //             }
+  //         }
+  //     ]
+  // }
+
+}
