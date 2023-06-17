@@ -5,7 +5,7 @@ from ray.rllib.models.tf.recurrent_net import \
 from ray.rllib.utils import try_import_tf
 from ray.rllib.utils.annotations import override
 
-tf = try_import_tf()
+tf1_module, tf, version  = try_import_tf()
 
 class FacilityNet(RecurrentTFModelV2):
 

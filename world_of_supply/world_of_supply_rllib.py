@@ -160,9 +160,10 @@ class StateCalculator:
                     if source.id in facility.consumer.open_orders:
                         state['consumer_in_transit_orders'][i] = facility.consumer.open_orders[source.id][product_id]
 
+    @staticmethod
     def _safe_div(x, y):
-        if y is not 0:
-            return x
+        if y != 0:
+            return x/y
         return 0
 
     def _serialize_state(self, state):

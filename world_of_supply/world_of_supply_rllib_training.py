@@ -21,7 +21,7 @@ from ray.tune.logger import pretty_print
 from world_of_supply_rllib import Utils
 from world_of_supply_rllib_models import FacilityNet
 
-tf = try_import_tf()
+tf1_module, tf, version = try_import_tf()
 
 ray.shutdown()
 ray.init()
