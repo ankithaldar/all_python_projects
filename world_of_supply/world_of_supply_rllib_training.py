@@ -4,16 +4,16 @@ from functools import partial
 
 import numpy as np
 import ray
-import ray.rllib.agents.ppo.ppo as ppo
-import ray.rllib.agents.qmix.qmix as qmix
+import ray.rllib.algorithms.ppo.ppo as ppo
+import ray.rllib.algorithms.qmix.qmix as qmix
 # import ray.rllib.agents.trainer_template as tt
 import ray.rllib.env.multi_agent_env
 import ray.rllib.models as models
 import world_of_supply_rllib as wsr
 from gym.spaces import Box, Discrete, MultiDiscrete, Tuple
-from ray.rllib.agents.ppo.ppo_tf_policy import PPOTFPolicy
-from ray.rllib.agents.ppo.ppo_torch_policy import PPOTorchPolicy
-from ray.rllib.agents.qmix.qmix_policy import QMixTorchPolicy
+# from ray.rllib.agents.ppo.ppo_torch_policy import PPOTorchPolicy
+# from ray.rllib.agents.qmix.qmix_policy import QMixTorchPolicy
+from ray.rllib.algorithms.ppo.ppo_tf_policy import PPOTF2Policy as PPOTFPolicy
 from ray.rllib.models import ModelCatalog
 from ray.rllib.models.tf.tf_action_dist import MultiCategorical
 from ray.rllib.utils import try_import_tf
