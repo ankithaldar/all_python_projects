@@ -1,8 +1,9 @@
-from ray.rllib.models.modelv2 import ModelV2
-from ray.rllib.models.tf.recurrent_tf_modelv2 import RecurrentTFModelV2
-from ray.rllib.utils.annotations import override
-from ray.rllib.utils import try_import_tf
 import numpy as np
+from ray.rllib.models.modelv2 import ModelV2
+from ray.rllib.models.tf.recurrent_net import \
+    RecurrentNetwork as RecurrentTFModelV2
+from ray.rllib.utils import try_import_tf
+from ray.rllib.utils.annotations import override
 
 tf = try_import_tf()
 
@@ -33,19 +34,19 @@ class FacilityNet(RecurrentTFModelV2):
                 mask=tf.sequence_mask(seq_in),
                 initial_state=[state_in_h, state_in_c]
         )
-        
+
         logits = tf.keras.layers.Dense(
             self.num_outputs,
             activation=tf.keras.activations.linear,   # softmax mapping is done in the action distribution (MultiCategorical) downstream
             name="logits")(lstm_out)
-        
+
         values = tf.keras.layers.Dense(1, activation=None, name="values")(lstm_out)
 
         # Create the RNN model
         self.rnn_model = tf.keras.Model(
             inputs=[input_layer, seq_in, state_in_h, state_in_c],
             outputs=[logits, values, state_h, state_c])
-        
+
         self.register_variables(self.rnn_model.variables)
 
     @override(RecurrentTFModelV2)
