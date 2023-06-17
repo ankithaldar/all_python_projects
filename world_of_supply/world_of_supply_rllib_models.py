@@ -47,7 +47,7 @@ class FacilityNet(RecurrentTFModelV2):
             inputs=[input_layer, seq_in, state_in_h, state_in_c],
             outputs=[logits, values, state_h, state_c])
 
-        self.register_variables(self.rnn_model.variables)
+        # self.register_variables(self.rnn_model.variables)
 
     @override(RecurrentTFModelV2)
     def forward_rnn(self, inputs, state, seq_lens):
