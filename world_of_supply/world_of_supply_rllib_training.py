@@ -4,13 +4,13 @@ from functools import partial
 
 import numpy as np
 import ray
-import ray.rllib.algorithms.ppo.ppo as ppo
 import ray.rllib.algorithms.qmix.qmix as qmix
 # import ray.rllib.agents.trainer_template as tt
 import ray.rllib.env.multi_agent_env
 import ray.rllib.models as models
 import world_of_supply_rllib as wsr
 from gym.spaces import Box, Discrete, MultiDiscrete, Tuple
+from ray.rllib.algorithms.ppo import PPOConfig
 # from ray.rllib.agents.ppo.ppo_torch_policy import PPOTorchPolicy
 # from ray.rllib.agents.qmix.qmix_policy import QMixTorchPolicy
 from ray.rllib.algorithms.ppo.ppo_tf_policy import PPOTF2Policy as PPOTFPolicy
@@ -175,26 +175,27 @@ def play_baseline(n_iterations):
 def train_ppo(n_iterations):
 
     policy_map = policy_mapping_global.copy()
-    ext_conf = ppo.DEFAULT_CONFIG.copy()
-    ext_conf.update({
-            "num_workers": 16,
-            "num_gpus": 1,
-            "vf_share_layers": True,
-            "vf_loss_coeff": 20.00,
-            "vf_clip_param": 200.0,
-            "lr": 2e-4,
-            "multiagent": {
-                "policies": filter_keys(policies, set(policy_mapping_global.values())),
-                "policy_mapping_fn": create_policy_mapping_fn(policy_map),
-                "policies_to_train": ['ppo_producer', 'ppo_consumer']
-            }
-        })
+
+    ppo_trainer = (
+        PPOConfig()
+        .training(
+            model={"vf_share_layers": True,},
+            vf_clip_param=200.0,
+            vf_loss_coeff= 20.00,
+            lr=2e-4
+        )
+        .rollouts(num_rollout_workers=16)
+        .resources(num_gpus=1)
+        .environment(env=wsr.WorldOfSupplyEnv)
+        .multi_agent(
+            policies=filter_keys(policies, set(policy_mapping_global.values())),
+            policy_mapping_fn=create_policy_mapping_fn(policy_map),
+            policies_to_train=['ppo_producer', 'ppo_consumer']
+        )
+        .build()
+    )
 
     print(f"Environment: action space producer {env.action_space_producer}, action space consumer {env.action_space_consumer}, observation space {env.observation_space}")
-
-    ppo_trainer = ppo.PPOTrainer(
-        env = wsr.WorldOfSupplyEnv,
-        config = dict(ext_conf, **base_trainer_config))
 
     training_start_time = time.process_time()
     for i in range(n_iterations):
