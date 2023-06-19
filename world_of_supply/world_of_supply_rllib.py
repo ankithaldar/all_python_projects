@@ -9,7 +9,7 @@ from pprint import pprint
 import numpy as np
 import world_of_supply_environment as ws
 import yaml
-from gym.spaces import Box, Discrete, MultiDiscrete, Tuple
+from gymnasium.spaces import Box, Dict, Discrete, MultiDiscrete, Tuple
 from ray.rllib.algorithms.ppo.ppo_tf_policy import PPOTF2Policy as PPOTFPolicy
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
 from ray.rllib.policy.policy import Policy
@@ -254,8 +254,8 @@ class ActionCalculator:
 
 
 class WorldOfSupplyEnv(MultiAgentEnv):
-
     def __init__(self, env_config):
+        super().__init__()
         self.env_config = env_config
         self.reference_world = ws.WorldBuilder.create()
         self.current_iteration = 0
@@ -285,26 +285,29 @@ class WorldOfSupplyEnv(MultiAgentEnv):
         self.reward_calculator = RewardCalculator(env_config)
         self.action_calculator = ActionCalculator(self)
 
-        self.action_space_producer = MultiDiscrete([
-            8,                             # unit price
-            6,                             # production rate level
-        ])
-
-        self.action_space_consumer = MultiDiscrete([
-            self.n_products(),                           # consumer product id
-            self.max_sources_per_facility,               # consumer source id
-            6                                            # consumer_quantity
-        ])
+        self.action_space = Dict(
+            {
+                'producer': MultiDiscrete([
+                    8,                             # unit price
+                    6,                             # production rate level
+                ]),
+                'consumer': MultiDiscrete([
+                    self.n_products(),                           # consumer product id
+                    self.max_sources_per_facility,               # consumer source id
+                    6                                            # consumer_quantity
+                ])
+            }
+        )
 
         example_state, _ = self.state_calculator.world_to_state(self.reference_world)
         state_dim = len(list(example_state.values())[0])
         self.observation_space = Box(low=0.00, high=1.00, shape=(state_dim, ), dtype=np.float64)
 
-    def reset(self):
+    def reset(self, *, seed=None, options=None):
         self.world = ws.WorldBuilder.create(80, 16)
         self.time_step = 0
         state, _ = self.state_calculator.world_to_state(self.world)
-        return state
+        return state, {}
 
     def step(self, action_dict):
         control = self.action_calculator.action_dictionary_to_control(action_dict, self.world)
@@ -326,12 +329,15 @@ class WorldOfSupplyEnv(MultiAgentEnv):
         seralized_states, info_states = self.state_calculator.world_to_state(self.world)
 
         is_done = self.time_step >= self.env_config['episod_duration']
-        dones = { agent_id: is_done for agent_id in seralized_states.keys() }
-        dones['__all__'] = is_done
+        terminateds = { agent_id: is_done for agent_id in seralized_states.keys() }
+        terminateds['__all__'] = is_done
 
-        return seralized_states, rewards, dones, info_states
+        # Truncated should always be False by default.
+        truncateds = {k: False for k in terminateds.keys()}
 
-    def agent_ids(self):
+        return seralized_states, rewards, terminateds, truncateds, info_states
+
+    def _agent_ids(self):
         agents = []
         for f_id in self.world.facilities.keys():
             agents.append(Utils.agentid_producer(f_id))

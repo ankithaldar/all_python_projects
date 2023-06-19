@@ -9,8 +9,8 @@ import ray.rllib.algorithms.qmix.qmix as qmix
 import ray.rllib.env.multi_agent_env
 import ray.rllib.models as models
 import world_of_supply_rllib as wsr
-from gym.spaces import Box, Discrete, MultiDiscrete, Tuple
-from ray.rllib.algorithms.ppo import PPOConfig
+from gymnasium.spaces import Box, Discrete, MultiDiscrete, Tuple
+from ray.rllib.algorithms.ppo import PPO, PPOConfig
 # from ray.rllib.agents.ppo.ppo_torch_policy import PPOTorchPolicy
 # from ray.rllib.agents.qmix.qmix_policy import QMixTorchPolicy
 from ray.rllib.algorithms.ppo.ppo_tf_policy import PPOTF2Policy as PPOTFPolicy
@@ -38,16 +38,16 @@ env = wsr.WorldOfSupplyEnv(env_config)
 
 base_trainer_config = {
     'env_config': env_config,
-    'timesteps_per_iteration': 25000,
+    # 'timesteps_per_iteration': 25000,
 
     # == Environment Settings ==
     #'lr': 0.0005,
-    'gamma': 0.99,
+    # 'gamma': 0.99,
 
     # === Settings for the Trainer process ===
-    'train_batch_size': 2000,
-    'batch_mode': 'complete_episodes',
-    'rollout_fragment_length': 50,
+    # 'train_batch_size': 2000,
+    # 'batch_mode': 'complete_episodes',
+    # 'rollout_fragment_length': 50,
 }
 
 ppo_policy_config_producer = {
@@ -82,7 +82,7 @@ def print_model_summaries():
     config.update({"custom_model": "facility_net"})
     facility_net = models.ModelCatalog.get_model_v2(
         obs_space = env.observation_space,
-        action_space = env.action_space_consumer,
+        action_space = env.action_space['consumer'],
         num_outputs = 1,
         model_config = config)
     facility_net.rnn_model.summary()
@@ -91,10 +91,10 @@ def print_model_summaries():
 # Policy Configuration ===============================================================================
 
 policies = {
-        'baseline_producer': (wsr.ProducerSimplePolicy, env.observation_space, env.action_space_producer, wsr.SimplePolicy.get_config_from_env(env)),
-        'baseline_consumer': (wsr.ConsumerSimplePolicy, env.observation_space, env.action_space_consumer, wsr.SimplePolicy.get_config_from_env(env)),
-        'ppo_producer': (PPOTFPolicy, env.observation_space, env.action_space_producer, ppo_policy_config_producer),
-        'ppo_consumer': (PPOTFPolicy, env.observation_space, env.action_space_consumer, ppo_policy_config_consumer)
+        'baseline_producer': (wsr.ProducerSimplePolicy, env.observation_space, env.action_space['producer'], wsr.SimplePolicy.get_config_from_env(env)),
+        'baseline_consumer': (wsr.ConsumerSimplePolicy, env.observation_space, env.action_space['consumer'], wsr.SimplePolicy.get_config_from_env(env)),
+        'ppo_producer': (PPOTFPolicy, env.observation_space, env.action_space['producer'], ppo_policy_config_producer),
+        'ppo_consumer': (PPOTFPolicy, env.observation_space, env.action_space['consumer'], ppo_policy_config_consumer)
     }
 
 def filter_keys(d, keys):
@@ -176,26 +176,43 @@ def train_ppo(n_iterations):
 
     policy_map = policy_mapping_global.copy()
 
-    ppo_trainer = (
+    ext_conf = (
         PPOConfig()
         .training(
             model={"vf_share_layers": True,},
             vf_clip_param=200.0,
             vf_loss_coeff= 20.00,
-            lr=2e-4
+            lr=2e-4,
+            gamma=0.99,
+            train_batch_size=2000
         )
-        .rollouts(num_rollout_workers=16)
+        .rollouts(
+            num_rollout_workers=16,
+            rollout_fragment_length=125,
+            batch_mode='complete_episodes'
+        )
+        .reporting(
+            min_train_timesteps_per_iteration=25000
+        )
         .resources(num_gpus=1)
-        .environment(env=wsr.WorldOfSupplyEnv)
         .multi_agent(
             policies=filter_keys(policies, set(policy_mapping_global.values())),
             policy_mapping_fn=create_policy_mapping_fn(policy_map),
             policies_to_train=['ppo_producer', 'ppo_consumer']
         )
-        .build()
+        .framework(
+            framework='tf2'
+        )
+        .environment(
+            env=wsr.WorldOfSupplyEnv,
+            env_config=env_config,
+            disable_env_checking=True
+        )
     )
 
-    print(f"Environment: action space producer {env.action_space_producer}, action space consumer {env.action_space_consumer}, observation space {env.observation_space}")
+    ppo_trainer = PPO(config=ext_conf)
+
+    print(f"Environment: action space producer {env.action_space['producer']}, action space consumer {env.action_space['consumer']}, observation space {env.observation_space}")
 
     training_start_time = time.process_time()
     for i in range(n_iterations):
