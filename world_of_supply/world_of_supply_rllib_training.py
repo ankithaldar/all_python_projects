@@ -187,14 +187,14 @@ def train_ppo(n_iterations):
             train_batch_size=2000
         )
         .rollouts(
-            num_rollout_workers=16,
-            rollout_fragment_length=125,
+            num_rollout_workers=2,
+            rollout_fragment_length='auto',
             batch_mode='complete_episodes'
         )
         .reporting(
             min_train_timesteps_per_iteration=25000
         )
-        .resources(num_gpus=1)
+        .resources(num_gpus=0)
         .multi_agent(
             policies=filter_keys(policies, set(policy_mapping_global.values())),
             policy_mapping_fn=lambda agent_id: policy_mapping_global[agent_id],
