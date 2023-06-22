@@ -176,7 +176,7 @@ def train_ppo(n_iterations):
 
     policy_map = policy_mapping_global.copy()
 
-    ext_conf = (
+    ppo_trainer = (
         PPOConfig()
         .training(
             model={"vf_share_layers": True,},
@@ -208,9 +208,8 @@ def train_ppo(n_iterations):
             env_config=env_config,
             disable_env_checking=True
         )
+        .build()
     )
-
-    ppo_trainer = PPO(config=ext_conf)
 
     print(f"Environment: action space producer {env.action_space['producer']}, action space consumer {env.action_space['consumer']}, observation space {env.observation_space}")
 
