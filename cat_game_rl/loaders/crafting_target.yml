@@ -1,0 +1,24 @@
+materials:
+  - tree : 0
+  - cotton : 0
+  - rock : 0
+  - quartz : 0
+  - string : 0
+  - wood : 0
+  - metal : 0
+  - ribbon : 0
+  - needles : 0
+  - sparkles : 0
+  - bronze : 0
+  - silver : 0
+  - gold : 14
+  - amethyst : 0
+  - pendant : 6
+  - necklace : 3
+  - orb : 75
+  - water : 0
+  - fire : 3
+  - waterstone : 16
+  - firestone : 14
+  - elementstone : 6
+  - artifact : 6
