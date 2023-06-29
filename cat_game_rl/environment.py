@@ -253,6 +253,7 @@ class Items:
   bom: BillOfMaterials
   target_count: int
   total_crafted_count: int
+  sources: list
   game_economy: GameEconomy
   clock: GameClock
 
@@ -381,6 +382,10 @@ def load_item_facilities(world: GameWorld) -> GameWorld:
       ),
       target_count=items_target[each['item_name']],
       total_crafted_count=items_crafted[each['item_name']],
+      sources = [
+        world.item_facilities[i] for i in each['req_unit_raw']
+        if i not in BASE_ITEMS
+      ],
       game_economy=world.economy,
       clock=world.clock
     )
