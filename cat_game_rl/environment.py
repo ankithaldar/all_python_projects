@@ -148,8 +148,8 @@ class ManuFacturingUnit(Agent):
 
   def manage_crafting(self):
     # check if batch count of crafts is required to craft
-    if self.item.total_crafted_count + self.batch_size > self.item.target_count:
-      self.batch_size = self.item.target_count - self.item.total_crafted_count
+    if self.item.total_crafted_count + self.batch_size > self.item.total_target_count:
+      self.batch_size = self.item.total_target_count - self.item.total_crafted_count
 
     # define current running batch size
     self.last_run_batch_size = self.batch_size
@@ -276,7 +276,8 @@ class Items:
 
   name: str
   bom: BillOfMaterials
-  target_count: int
+  target_count: int # final number that is needed for decor crafting
+  total_target_count: int # total number of pirces needed to fulfil
   total_crafted_count: int
   game_economy: GameEconomy
   clock: GameClock
@@ -385,9 +386,12 @@ def get_total_counts(target_items):
 
 # load item facilities for handle crafting
 def load_item_facilities(world: GameWorld) -> GameWorld:
-  items_target = get_total_counts(
-    parse_materials(yaml_reader(TARGET_ITEM_COUNTS)['materials'])
+  # fix fanal world targets for crafting
+  targets = parse_materials(
+    yaml_reader(TARGET_ITEM_COUNTS)['materials']
   )
+
+  items_full_targets = get_total_counts(targets)
   items_crafted = get_total_counts(world.economy.items_in_stash)
 
   # adding item facilities
@@ -401,7 +405,8 @@ def load_item_facilities(world: GameWorld) -> GameWorld:
         init_cost=each['init_cost'],
         req_time=each['time'] if GAME_TYPE == 'Normal' else 1
       ),
-      target_count=items_target[each['item_name']],
+      target_count=targets[each['item_name']],
+      total_target_count=items_full_targets[each['item_name']],
       total_crafted_count=items_crafted[each['item_name']],
       game_economy=world.economy,
       clock=world.clock
