@@ -287,11 +287,18 @@ class Items:
     self.is_crafting = False
     self.last_piece_value = self.bom.init_cost
     self.manufacturing = ManuFacturingUnit(self)
+    self.define_item_production_level()
 
   def act(self, control):
     if self.target_count > self.total_crafted_count:
       self.manufacturing.act(control)
     self.current_stash = self.game_economy.items_in_stash[self.name]
+
+  def define_item_production_level(self):
+    if len(self.sources) == 0:
+      self.crafting_level = 1
+    else:
+      self.crafting_level = max([i.crafting_level for i in self.sources]) + 1
 
 
 # ==============================================================================
