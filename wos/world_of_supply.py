@@ -11,10 +11,10 @@ from tqdm import tqdm as tqdm
 
 #   script imports
 import world_of_supply_environment as ws
-import world_of_supply_renderer as wsr
+# import world_of_supply_renderer as wsr
 import world_of_supply_tools as wst
 
-for module in [ws, wsr, wst]:
+for module in [ws, wst]:
   importlib.reload(module)
 # imports
 
@@ -43,20 +43,6 @@ with tqdm(total=eposod_len * n_episods) as pbar:
       )
       pbar.update(1)
 tracker.render()
-
-# Test rendering
-renderer = wsr.AsciiWorldRenderer()
-frame_seq = []
-world = ws.WorldBuilder.create()
-policy = ws.SimpleControlPolicy()
-for epoch in tqdm(range(300)):
-    frame = renderer.render(world)
-    frame_seq.append(np.asarray(frame))
-    world.act(policy.compute_control(world))
-
-print('Rendering the animation...')
-wsr.AsciiWorldRenderer.plot_sequence_images(frame_seq)
-
 
 # Core Simulation and logic
 
