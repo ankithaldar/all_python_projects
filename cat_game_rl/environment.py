@@ -191,16 +191,22 @@ class ManuFacturingUnit(Agent):
       not self.item.is_crafting
       and
       # checking if the coins are available
-      self.item.game_economy.coins >= self.get_batch_cost()
+      self.check_crafting_sufficient_coins()
       and
       # checking if raw meritials are available for the batch size
-      all(
-        # check if input items are crafted and available for crafting
-        self.item.game_economy.items_in_stash[item] >= self.input_items_batch(req)
-        if item not in BASE_ITEMS else True
-        for item, req in self.item.bom.inputs.items()
-        #?? Note Check for a logic to use BOM input_batch_counts() instead
-      )
+      self.check_input_item_availability()
+    )
+
+  def check_crafting_sufficient_coins(self):
+    return self.item.game_economy.coins >= self.get_batch_cost()
+
+  def check_input_item_availability(self):
+    return all(
+      # check if input items are crafted and available for crafting
+      self.item.game_economy.items_in_stash[item] >= self.input_items_batch(req)
+      if item not in BASE_ITEMS else True
+      for item, req in self.item.bom.inputs.items()
+      #?? Note Check for a logic to use BOM input_batch_counts() instead
     )
 
   # get input items batch size
