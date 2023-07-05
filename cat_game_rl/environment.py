@@ -68,6 +68,19 @@ class Agent(ABC):
 
 # ==============================================================================
 @dataclass
+class WaitTime:
+  '''Calculate manufacturing wait times'''
+
+  inputs_time: Counter = Counter()
+
+  def __add__(self, other):
+    return WaitTime(self.inputs_time + other.inputs_time)
+
+  def __repr__(self):
+    return f'{ {k: v for k, v in self.inputs_time} }'
+
+# ==============================================================================
+@dataclass
 class BillOfMaterials:
   '''handle bill of materials'''
 
@@ -80,6 +93,9 @@ class BillOfMaterials:
   def input_batch_counts(self, batch_size):
     return Counter({k: v*batch_size for k, v in self.inputs.items()})
 
+  def input_item_batch_count(self, item, batch_size):
+    return self.inputs[item] * batch_size
+
 
 # ==============================================================================
 class GameClock:
@@ -89,7 +105,7 @@ class GameClock:
     self.__time = 0
 
   def tick(self) -> None:
-    self.__time += 5 if GAME_TYPE == 'Normal' else 1
+    self.__time += 1
 
   @property
   def time(self) -> int:
@@ -124,6 +140,8 @@ class GameEconomy:
 class ManuFacturingUnit(Agent):
   '''Unit for crafting individual items'''
 
+  # control is batch_size only
+
   def __init__(self, item) -> None:
     self.item = item
     self.last_run_batch_size = 0
@@ -140,6 +158,20 @@ class ManuFacturingUnit(Agent):
     # check if batch size to be crafted is possible to craft
     if self.check_possible_manufacture():
       self.start_crafting()
+      return WaitTime()
+    else:
+      # add waittime calculation logic
+      waittime = {}
+      if not self.item.is_crafting:
+        for k in self.item.bom.inputs:
+          if (
+            self.item.game_economy.items_in_stash[k]
+            >=
+            self.item.bom.input_item_batch_count(k, self.last_run_batch_size)
+          ):
+            waittime[k] = 1
+
+      return WaitTime(Counter(waittime))
 
   def start_crafting(self):
     # update coins
@@ -222,6 +254,7 @@ class ManuFacturingUnit(Agent):
 
   def act(self, control):
     self.batch_size = control
+    waittime = Counter()
 
     # end crafting
     if self.item.is_crafting:
@@ -229,10 +262,11 @@ class ManuFacturingUnit(Agent):
 
     if self.item.total_crafted_count < self.item.target_count:
       # start or restart crafting again
-      self.manage_crafting()
+      waittime = self.manage_crafting()
     else:
       # when total crafting ends for that item
       self.delete_attributes()
+
 
 
 # ==============================================================================
@@ -282,6 +316,7 @@ class GameWorld:
     self.check_presents()
     for item in self.item_facilities:
       self.item_facilities[item].act(BATCH_SIZE[item])
+
 
 # classes
 
