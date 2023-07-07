@@ -288,6 +288,7 @@ class ManuFacturingUnit(Agent):
     else:
       # when total crafting ends for that item
       self.delete_attributes()
+      return WaitTime()
 
 
 # ==============================================================================
@@ -471,7 +472,7 @@ def run_basic_simulation():
   world = worldbuilder_create()
 
   while not world.check_terminate_condition():
-    print(world.act())
+    print(world.clock.time, world.act())
 
   # print(
     # world.clock.time
