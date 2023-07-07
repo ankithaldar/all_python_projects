@@ -68,6 +68,20 @@ class Agent(ABC):
 
 # ==============================================================================
 @dataclass
+class WaitTime:
+  '''Calculate manufacturing wait times'''
+
+  inputs_time: Counter = Counter()
+
+  def __add__(self, other):
+    return WaitTime(self.inputs_time + other.inputs_time)
+
+  def __repr__(self):
+    return f'{ {k: v for k, v in self.inputs_time} }'
+
+
+# ==============================================================================
+@dataclass
 class BillOfMaterials:
   '''handle bill of materials'''
 
