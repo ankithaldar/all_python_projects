@@ -7,7 +7,7 @@
 # imports
 from abc import ABC
 from collections import Counter #, ChainMap
-from dataclasses import dataclass # , field
+from dataclasses import dataclass, field
 from functools import reduce
 from pathlib import Path
 # from typing import Dict, List
@@ -56,7 +56,7 @@ BATCH_SIZE = {
   'artifact': 1
 }
 
-GAME_TYPE = 'Normal' # Normal
+GAME_TYPE = '1Mc' # Normal
 # constants
 
 
@@ -71,7 +71,7 @@ class Agent(ABC):
 class WaitTime:
   '''Calculate manufacturing wait times'''
 
-  inputs_time: Counter = Counter()
+  inputs_time: Counter = field(default_factory=Counter)
 
   def __add__(self, other):
     return WaitTime(self.inputs_time + other.inputs_time)
@@ -183,8 +183,17 @@ class ManuFacturingUnit(Agent):
         self.update_source_current_stash()
 
       else:
+        wait_time = WaitTime()
+        if not all(sources_available) and not self.item.is_crafting:
+          for item, availabilty in zip(self.item.sources, sources_available):
+            if not availabilty:
+              wait_time.inputs_time[item.name] += 1
+
+        return wait_time
+
         # get out of loop and stop adding new counts
-        break
+        # break
+    return WaitTime()
 
 
   # check if crafting start is possible
@@ -275,7 +284,7 @@ class ManuFacturingUnit(Agent):
     if self.item.total_crafted_count < self.item.target_count:
       # start or restart crafting again
       if self.check_craft_start_posibility():
-        self.start_crafting()
+        return self.start_crafting()
     else:
       # when total crafting ends for that item
       self.delete_attributes()
@@ -303,9 +312,12 @@ class Items:
     return self.game_economy.items_in_stash[self.name]
 
   def act(self, control):
+    wait_time = WaitTime()
     if self.target_count > self.total_crafted_count:
-      self.manufacturing.act(control)
+      wait_time = self.manufacturing.act(control)
     self.current_stash = self.get_current_count_in_stash()
+
+    return wait_time
 
 
 # ==============================================================================
@@ -327,12 +339,23 @@ class GameWorld:
       for item in self.item_facilities
     )
 
+  def calculate_global_wait_time(self, wait_time):
+    global_wait_time = Counter()
+    for item in wait_time:
+      global_wait_time.update(wait_time[item].inputs_time)
+
+    return global_wait_time
+
   def act(self):
+    item_wise_wait_time = {}
     self.check_presents()
     for item in self.item_facilities:
-      self.item_facilities[item].act(BATCH_SIZE[item])
+      item_wise_wait_time[item] = self.item_facilities[item].act(BATCH_SIZE[item])
 
     self.clock.tick()
+
+    return self.calculate_global_wait_time(item_wise_wait_time)
+
 
 
 # ==============================================================================
@@ -448,10 +471,10 @@ def run_basic_simulation():
   world = worldbuilder_create()
 
   while not world.check_terminate_condition():
-    world.act()
+    print(world.act())
 
-  print(
-    world.clock.time
+  # print(
+    # world.clock.time
     # [(
     #   k,
     #   world.item_facilities[k].manufacturing.waittime.coins,
@@ -459,7 +482,7 @@ def run_basic_simulation():
     # )
     # for k in world.item_facilities.keys()
     # ]
-  )
+  # )
 # functions
 
 
