@@ -128,51 +128,63 @@ class ManuFacturingUnit(Agent):
     del self.end_time
     del self.batch_item_count
 
-  def start_possible_crafting(self):
+  # actions that need to be taken when ending crafting
+  def stop_crafting(self):
+    # update stash on crafting completion
+    self.item.game_economy.update_stash(
+      gained_stash={self.item.name: self.batch_item_count}
+    )
 
+    # keep total crafted count
+    self.item.total_crafted_count += self.batch_item_count
+
+    # mark unit as free for crafting
+    self.item.is_crafting = False
+
+    # reset unit batch
+    self.batch_item_count = 0
+
+  def start_crafting(self):
+    # goes through the batch_size and puts each item on crafting one at a time
+    for _ in range(self.batch_size):
+      # check coin available
+      coins_available = self.check_crafting_sufficient_coins()
+
+      # check whether inputs are available in common stash
+      sources_available = self.check_crafting_sufficient_inputs()
+
+      if coins_available and all(sources_available):
+        # update coins
+        self.update_coins_when_start_crafting()
+
+        # update input inventory
+        self.update_inputs_when_start_crafting()
+
+        # add item count
+        self.batch_item_count += 1
+
+        if self.batch_item_count == 1:
+          self.update_crafting_parameters_and_flags()
+
+        self.update_source_current_stash()
+
+      else:
+        break
+
+
+  # check if crafting start is possible
+  def check_craft_start_posibility(self):
     start_crafting = False
     if self.check_sources_as_base_items():
       start_crafting = self.check_sources_base_items_start_crafting()
     else:
       start_crafting = True # self.batch_item_count < self.batch_size
 
-    if start_crafting:
-      # goes through the batch_size and puts each item on crafting one at a time
-      for _ in range(self.batch_size - self.batch_item_count):
-        # check coin available
-        coins_available = self.check_crafting_sufficient_coins()
+    return start_crafting
 
-        # check whether inputs are available in common stash
-        sources_available = self.check_crafting_sufficient_inputs()
-
-        if coins_available and all(sources_available):
-          # update coins
-          self.item.game_economy.update_coins(
-            used_coins=self.get_crafting_unit_cost()
-          )
-
-          # update input inventory
-          self.item.game_economy.update_stash(
-            used_stash=self.item.bom.inputs
-          )
-
-          # add item count
-          self.batch_item_count += 1
-
-          self.update_source_current_stash()
-
-
-        else:
-          break
-
-        if self.batch_item_count == 1:
-          # with 1st item crafting start the machine gets involved
-          self.start_time = self.item.clock.time
-          # flag is_crafting
-          self.item.is_crafting = True
-          # expected end time
-          self.end_time = self.start_time + self.item.bom.req_time
-
+  # check if item in string, wood, metal, bronze, amethyst and orb
+  def check_sources_as_base_items(self):
+    return len(self.item.sources) == 0
 
   # check for source base item start crafting
   def check_sources_base_items_start_crafting(self):
@@ -182,35 +194,15 @@ class ManuFacturingUnit(Agent):
       not self.item.is_crafting
     )
 
-  # check if item in string, wood, metal, bronze, amethyst and orb
-  def check_sources_as_base_items(self):
-    return len(self.item.sources) == 0
-
   # check if current time is same as end time for the unit
   def check_crafting_end_time(self):
     return self.end_time == self.item.clock.time
 
-  # actions that need to taken when ending crafting
-  def stop_crafting(self):
-    self.item.game_economy.update_stash(
-      gained_stash={self.item.name: self.batch_item_count}
-    )
-
-    self.item.total_crafted_count += self.batch_item_count
-
-    self.item.is_crafting = False
-    self.batch_item_count = 0
-
-  # get to be crafted unit cost
-  def get_crafting_unit_cost(self):
-    # check coins for next count in the batch
-    return self.item.bom.init_cost * (
-      1 + 0.5 * ((self.batch_item_count + 1) - 1)
-    )
-
+  # checking if required coins for the item count is available
   def check_crafting_sufficient_coins(self):
     return self.item.game_economy.coins >= self.get_crafting_unit_cost()
 
+  # checking if required inputs for the item count is available
   def check_crafting_sufficient_inputs(self):
     sources_available =[]
     if len(self.item.sources) == 0:
@@ -224,9 +216,38 @@ class ManuFacturingUnit(Agent):
 
     return sources_available
 
+  # get to be crafted unit cost
+  def get_crafting_unit_cost(self):
+    # check coins for next count in the batch
+    return self.item.bom.init_cost * (
+      1 + 0.5 * ((self.batch_item_count + 1) - 1)
+    )
+
+  # update current stash for sources
   def update_source_current_stash(self):
     for input_sources in self.item.sources:
       input_sources.current_stash = input_sources.get_current_count_in_stash()
+
+  # update coins when start crafting
+  def update_coins_when_start_crafting(self):
+    self.item.game_economy.update_coins(
+      used_coins=self.get_crafting_unit_cost()
+    )
+
+  # update inputs when start crafting
+  def update_inputs_when_start_crafting(self):
+    self.item.game_economy.update_stash(
+      used_stash=self.item.bom.inputs
+    )
+
+  # update crafting parameters and flags
+  def update_crafting_parameters_and_flags(self):
+    # with 1st item crafting start the machine gets involved
+    self.start_time = self.item.clock.time
+    # flag is_crafting
+    self.item.is_crafting = True
+    # expected end time
+    self.end_time = self.start_time + self.item.bom.req_time
 
   def act(self, control=0) -> None:
     if control > 0:
@@ -238,7 +259,8 @@ class ManuFacturingUnit(Agent):
 
     if self.item.total_crafted_count < self.item.target_count:
       # start or restart crafting again
-      self.start_possible_crafting()
+      if self.check_craft_start_posibility():
+        self.start_crafting()
     else:
       # when total crafting ends for that item
       self.delete_attributes()
@@ -257,12 +279,12 @@ class Items:
   game_economy: GameEconomy
   clock: GameClock
 
-  def __post_init__(self):
+  def __post_init__(self) -> None:
     self.is_crafting = False
     self.current_stash = self.get_current_count_in_stash()
     self.manufacturing = ManuFacturingUnit(self)
 
-  def get_current_count_in_stash(self):
+  def get_current_count_in_stash(self) -> int:
     return self.game_economy.items_in_stash[self.name]
 
   def act(self, control):
@@ -275,16 +297,16 @@ class Items:
 class GameWorld:
   '''Cat Game RL World'''
 
-  def __init__(self):
+  def __init__(self) -> None:
     self.economy = GameEconomy()
     self.clock = GameClock()
     self.item_facilities = {}
 
-  def check_presents(self):
+  def check_presents(self) -> None:
     if self.clock.time % 5 == 0:
       self.economy.update_coins(gained_coins=210)
 
-  def check_terminate_condition(self):
+  def check_terminate_condition(self) -> bool:
     return all(
       self.item_facilities[item].total_crafted_count >= self.item_facilities[item].target_count
       for item in self.item_facilities
@@ -297,6 +319,8 @@ class GameWorld:
 
     self.clock.tick()
 
+
+# ==============================================================================
 # classes
 
 
