@@ -183,18 +183,19 @@ class ManuFacturingUnit(Agent):
         self.update_source_current_stash()
 
       else:
+        # get out of loop and stop adding new counts
         break
 
 
   # check if crafting start is possible
   def check_craft_start_posibility(self):
-    start_crafting = False
+    can_start_crafting = False
     if self.check_sources_as_base_items():
-      start_crafting = self.check_sources_base_items_start_crafting()
+      can_start_crafting = self.check_sources_base_items_start_crafting()
     else:
-      start_crafting = True # self.batch_item_count < self.batch_size
+      can_start_crafting = True # self.batch_item_count < self.batch_size
 
-    return start_crafting
+    return can_start_crafting
 
   # check if item in string, wood, metal, bronze, amethyst and orb
   def check_sources_as_base_items(self):
