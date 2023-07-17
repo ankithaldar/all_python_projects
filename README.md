@@ -1,5 +1,4 @@
-# All Python projects that I'll be working on
-Each project has its own main branch and sub branches in format
+# Inventory Alloction
 
 ```
 <project_name>/main
