@@ -29,8 +29,8 @@ class InvOptEnv():
     self.lead_time = 2
     self.order_arrival_list = []
     self.demand_list = demand_records
-    self.state = np.array([self.inv_pos] +\
-       self.convert_day_of_week(self.day_of_week)
+    self.state = np.array(
+      [self.inv_pos] + self.convert_day_of_week(self.day_of_week)
     )
     self.state_list = []
     self.state_list.append(self.state)
