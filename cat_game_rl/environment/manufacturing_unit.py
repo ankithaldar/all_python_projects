@@ -6,6 +6,7 @@
 
 # imports
 #    script imports
+from rewards import Rewards
 from utils import DEBUG, write_to_log
 
 # imports
@@ -39,6 +40,16 @@ class ManufacturingUnit:
       # start or restart crafting again
       if self.is_crafting_possible():
         self.start_crafting()
+        # sending rewaards to the world
+        self.item.rewards = Rewards(
+          manufacturing=(self.batch_size - 1),
+          coins=(self.item.bom.get_actual_batch_cost(self.batch_size) - self.item.bom.get_batch_cost(self.batch_size))/self.item.bom.init_cost
+        )
+      else:
+        self.item.rewards = Rewards(
+          manufacturing=-self.item.bom.req_time * self.batch_size
+        )
+
     else:
       # when total crafting ends for that item
       self.delete_attributes()

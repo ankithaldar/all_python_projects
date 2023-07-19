@@ -121,14 +121,20 @@ def worldbuilder_create():
 def main():
   world = worldbuilder_create()
 
+  final_reward = []
+
   while not world.check_terminate_condition():
     world.action_per_time_step()
+    rewards = dict()
     for item, _ in world.item_facilities.items():
-      world.item_facilities[item].action_per_time_step(BATCH_SIZE[item])
+      rewards[item] = world.item_facilities[item].action_per_time_step(BATCH_SIZE[item])
+
+    final_reward.append(sum(rewards.values()))
 
   print(
     world.clock.time,
-    world.economy.items_in_stash
+    world.economy.items_in_stash,
+    sum(final_reward)
   )
 
 
