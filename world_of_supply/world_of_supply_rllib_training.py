@@ -197,7 +197,7 @@ def train_ppo(n_iterations):
         .resources(num_gpus=0)
         .multi_agent(
             policies=filter_keys(policies, set(policy_mapping_global.values())),
-            policy_mapping_fn=lambda agent_id: policy_mapping_global[agent_id],
+            policy_mapping_fn=lambda agent_id, episode, worker, **kwargs: policy_mapping_global[agent_id],
             policies_to_train=['ppo_producer', 'ppo_consumer']
         )
         .framework(
