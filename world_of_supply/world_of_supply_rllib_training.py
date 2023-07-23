@@ -1,6 +1,7 @@
 import random
 import time
 from functools import partial
+import os
 
 import numpy as np
 import ray
@@ -134,7 +135,7 @@ def update_policy_map(policy_map, i = 0, n_iterations = 0): # apply all changes 
 
 def create_policy_mapping_fn(policy_map):
     # policy mapping is sampled once per episod
-    def mapping_fn(agent_id):
+    def mapping_fn(agent_id, **kwargs):
         for f_filter, policy_name in policy_map.items():
             if f_filter in agent_id:
                 return policy_name
@@ -187,17 +188,17 @@ def train_ppo(n_iterations):
             train_batch_size=2000
         )
         .rollouts(
-            num_rollout_workers=2,
+            num_rollout_workers=0,
             rollout_fragment_length='auto',
             batch_mode='complete_episodes'
         )
         .reporting(
             min_train_timesteps_per_iteration=25000
         )
-        .resources(num_gpus=0)
+        .resources(num_gpus=int(os.environ.get("RLLIB_NUM_GPUS", "0")))
         .multi_agent(
             policies=filter_keys(policies, set(policy_mapping_global.values())),
-            policy_mapping_fn=lambda agent_id, episode, worker, **kwargs: policy_mapping_global[agent_id],
+            policy_mapping_fn=create_policy_mapping_fn(policy_map),
             policies_to_train=['ppo_producer', 'ppo_consumer']
         )
         .framework(
