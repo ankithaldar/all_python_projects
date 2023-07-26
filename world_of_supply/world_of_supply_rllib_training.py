@@ -135,7 +135,7 @@ def update_policy_map(policy_map, i = 0, n_iterations = 0): # apply all changes 
 
 def create_policy_mapping_fn(policy_map):
     # policy mapping is sampled once per episod
-    def mapping_fn(agent_id, **kwargs):
+    def mapping_fn(agent_id, episode, worker, **kwargs):
         for f_filter, policy_name in policy_map.items():
             if f_filter in agent_id:
                 return policy_name
