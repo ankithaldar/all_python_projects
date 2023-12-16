@@ -17,7 +17,9 @@ let
   salary_amount = 181093,
   maid_salary = 6000,
   car_cleaning = 700,
-  house_rent = 27300,
+  home_emi = 33820,
+
+  old_sheet_link = 'https://docs.google.com/spreadsheets/d/1IUMhLKsL4u0HBXtExAGgraABi8sbo1W4HiTBmoTfSBg'
 
   // months array
   mons = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
@@ -28,7 +30,7 @@ let
 
   card_map = {
     "CC IndusInd 0596": { "bill_date":  3, "sheet_cell": "$M$28" },
-    "CC SC 3205":       { "bill_date":  8, "sheet_cell": "$M$29" },
+    "CC SC 8148":       { "bill_date":  8, "sheet_cell": "$M$29" },
     "CC ICICI 7007":    { "bill_date": 14, "sheet_cell": "$M$30" },
     "CC One 0531":      { "bill_date": 14, "sheet_cell": "$M$31" },
     "CC Citi 7878":     { "bill_date": 21, "sheet_cell": "$M$32" },

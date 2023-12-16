@@ -15,7 +15,7 @@ function mvd_create_date_arrays() {
   var date_object = {
     'maid_salary': new Array(),
     'car_salary': new Array(),
-    'home_rent': new Array(),
+    'home_emi': new Array(),
     'empty_array': new Array()
   }
 
@@ -46,7 +46,7 @@ function mvd_flag_dates(date_object, days) {
         }
       } else if (key === 'car_salary') {
         date_object[key].push(dt);
-      } else if (key === 'home_rent') {
+      } else if (key === 'home_emi') {
         var new_dt = new Date(years, i, 5);
         date_object[key].push(new_dt);
       } else if (key === 'empty_array') {
@@ -72,7 +72,7 @@ function mvd_mark_dates_in_calendar(date_object) {
     row_cc = 33,
     row_b = 2,
     month = 0,
-    i=0
+    i = 0
     ;
 
   var bank_sheet_last_row = get_last_row(ss_b);
@@ -109,20 +109,20 @@ function mvd_mark_date(key_name, bank_row, cc_row, sheet_bank, sheet_cc, month) 
   // check key
   if (key_name == 'maid_salary') {
     bank_row = fill_bank_sheet('Salary', salary_amount, 0, "", bank_row, sheet_bank);
-    bank_row = fill_bank_sheet('Maid Salaries', 0, maid_salary, "Cash In [Bank]", bank_row, sheet_bank);
+    bank_row = fill_bank_sheet('Maid Salaries', "", maid_salary, "Cash In [Bank]", bank_row, sheet_bank);
 
   } else if (key_name == 'car_salary') {
-    bank_row = fill_bank_sheet('Car Cleaning', 0, car_cleaning, "Online", bank_row, sheet_bank);
+    bank_row = fill_bank_sheet('Car Cleaning', "", car_cleaning, "Online", bank_row, sheet_bank);
 
-  } else if (key_name == 'home_rent') {
-    bank_row = fill_bank_sheet('House Rent', 0, house_rent, "Online", bank_row, sheet_bank);
+  } else if (key_name == 'home_emi') {
+    bank_row = fill_bank_sheet('House EMI', "", home_emi, "Online", bank_row, sheet_bank);
 
   } else if (key_name == 'empty_array') {
     // need empty array to handle last day houserent orruring twice in line 85 this script
     // pass
   } else {
-    cc_row   = fill_cc_sheet(key_name, cc_row, sheet_cc, mons[month]);
-    bank_row = fill_bank_sheet(key_name + " - Repayment", 0, "", "", bank_row, sheet_bank, cc_row);
+    cc_row = fill_cc_sheet(key_name, cc_row, sheet_cc, mons[month]);
+    bank_row = fill_bank_sheet(key_name + " - Repayment", "", "", "", bank_row, sheet_bank, cc_row);
   }
 
   // return last filled row to avoid overlaps

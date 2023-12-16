@@ -24,7 +24,7 @@ function create_month_templates(days) {
     mns_set_formulaes_for_the_month(mons[i]);
 
     if (i > 0) {
-      mns_last_month_cash_at_hand(mons[i], mons[i-1]);
+      mns_last_month_cash_at_hand(mons[i], mons[i - 1]);
       mns_mark_currency_notes(mons[i], mons[i - 1]);
       mns_mark_last_month_app_carry_overs(mons[i], mons[i - 1]);
       mns_set_first_date_of_month(mons[i], mons[i - 1], days[i - 1]);
@@ -38,6 +38,10 @@ function create_month_templates(days) {
   hide_sheets(hidden_sheets);
   mns_mark_bank_statement_first_day();
   mns_mark_cc_statement_first_day();
+  mns_mark_imp_events_first_day();
+  mns_move_required_sheets();
+
+  mns_mark_from_last_year();
 
 };
 
@@ -55,7 +59,7 @@ function mns_check_if_jan_sheet_exists() {
   var
     ss = SpreadsheetApp.getActiveSpreadsheet(),
     itt = ss.getSheetByName(mons[0])
-  ;
+    ;
 
   return itt
 };
@@ -82,8 +86,8 @@ function mns_add_bank_sums_for_cash_online(sheet) {
     var formula_deposit = "";
 
     for (var k = 0; k < banks.length; k++) {
-      formula_withdraw = formula_withdraw + "SUMIFS('BankStatement - " + banks[k] + "'!$E:$E, 'BankStatement - " + banks[k] + "'!$B:$B, TEXT($A$2, \"MMMM\"), 'BankStatement - " + banks[k] + "'!$C:$C, $L" + j + ")" + (k < (banks.length - 1) ? " + " : "");
-      formula_deposit = formula_deposit + "SUMIFS('BankStatement - " + banks[k] + "'!$F:$F, 'BankStatement - " + banks[k] + "'!$B:$B, TEXT($A$2, \"MMMM\"), 'BankStatement - " + banks[k] + "'!$C:$C, $L" + j + ")" + (k < (banks.length - 1) ? " + " : "");
+      formula_withdraw = formula_withdraw + "SUMIFS('BankStatement - " + banks[k] + "'!$F:$F, 'BankStatement - " + banks[k] + "'!$B:$B, TEXT($A$2, \"MMMM\"), 'BankStatement - " + banks[k] + "'!$C:$C, $L" + j + ")" + (k < (banks.length - 1) ? " + " : "");
+      formula_deposit = formula_deposit + "SUMIFS('BankStatement - " + banks[k] + "'!$G:$G, 'BankStatement - " + banks[k] + "'!$B:$B, TEXT($A$2, \"MMMM\"), 'BankStatement - " + banks[k] + "'!$C:$C, $L" + j + ")" + (k < (banks.length - 1) ? " + " : "");
     }
     sheet.getRange("M" + j).setFormula("=(" + formula_withdraw + ") - (" + formula_deposit + ")");
   }
@@ -108,6 +112,11 @@ function mns_mark_currency_notes(sheet, prev_sheet) {
   for (var j = 2; j < 15; j++) {
     ss.getRange("P" + j).setFormula("=" + prev_sheet + "!P" + j);
   }
+
+  // Mark Credit Cards
+  for (var j = 4; j <= 11; j++) {
+    ss.getRange("L" + j).setFormula("=" + prev_sheet + "!L" + j);
+  }
 };
 
 function mns_mark_last_month_app_carry_overs(sheet, prev_sheet) {
@@ -119,7 +128,7 @@ function mns_mark_last_month_app_carry_overs(sheet, prev_sheet) {
   }
 }
 
-function mns_set_first_date_of_month(sheet, prev_sheet, days_in_last_mon){
+function mns_set_first_date_of_month(sheet, prev_sheet, days_in_last_mon) {
   var ss = get_sheet(sheet);
   ss.getRange("A2").setFormula("=" + prev_sheet + "!A" + (days_in_last_mon + 1) + " + 1");
 };
@@ -147,5 +156,39 @@ function mns_mark_cc_statement_first_day() {
   var ss = get_sheet("CCStatement");
   ss.getRange("A2").setFormula("=Jan!A2 - 31");
 };
+
+function mns_mark_imp_events_first_day() {
+  var ss = get_sheet("ImpEvents");
+  ss.getRange("A2").setFormula("=Jan!A2");
+}
+
+function mns_mark_from_last_year() {
+  // fill continuation of bank statement
+  for (var i = 0; i < banks.length; i++) {
+    var ss = get_sheet(hidden_sheets[1] + ' - ' + banks[i]);
+    ss.getRange("O1").setFormula('=IMPORTRANGE("' + old_sheet_link + '", "' + hidden_sheets[1] + ' - ' + banks[i] + '!O1")');
+  }
+
+  // fill Jan Last Month Cash in hand
+  var ss = get_sheet("Jan");
+  ss.getRange("M18").setFormula('=IMPORTRANGE("' + old_sheet_link + '", "Dec!M20")');
+
+
+  for (i = 2; i <= 14; i++) {
+    var ss = get_sheet("Jan");
+    ss.getRange('Jan!P' + i).setFormula('=IMPORTRANGE("' + old_sheet_link + '", "Dec!P' + i + '")');
+  }
+
+};
+
+function mns_move_required_sheets() {
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  ss.setActiveSheet(ss.getSheetByName("TiT_MoM"));
+  ss.moveActiveSheet(ss.getNumSheets());
+
+  ss.setActiveSheet(ss.getSheetByName("ImpEvents"));
+  ss.moveActiveSheet(ss.getNumSheets());
+}
 
 // -----------------------------------------------------------------------------
