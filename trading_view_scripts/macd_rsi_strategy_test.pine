@@ -1,0 +1,16 @@
+//@version=5
+indicator("macd_rsi_test", overlay=true, shorttitle="MACD RSI test")
+[macd_line, signal_line, hist_line] = ta.macd(close, fastlen=12, slowlen=26, siglen=9)
+macd_diff = macd_line - signal_line
+rsi = ta.rsi(close, length=14)
+buy_signal = macd_line > signal_line and rsi > 30
+sell_signal = macd_line < signal_line and rsi < 70
+strategy.entry("Long", strategy.long)
+strategy.entry("Short", strategy.short)
+buy_exit_signal = macd_diff < 0 or rsi < 30
+sell_exit_signal = macd_diff > 0 or rsi > 70
+plot(macd_diff, color=color.blue, linewidth=2)
+plot(signal_line, color=color.orange, linewidth=1)
+plot(rsi, color=color.purple, linewidth=2)
+plotshape(buy_signal, style=shape.arrowup, text="Buy", location=strategy.long, color=color.green)
+plotshape(sell_signal, style=shape.arrowdown, text="Sell", location=strategy.short, color=color.red)
